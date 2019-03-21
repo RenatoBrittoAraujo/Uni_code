@@ -1,14 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-// Linked list node
+#include "sp_node.h"
 
-struct Node{
-
-	int value;
-	Node * pointer;
-
-};
+typedef struct SPNode Node;
 
 // Linked list 
 

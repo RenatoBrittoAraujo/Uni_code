@@ -1,12 +1,9 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Node{
-		
-	int value;
-	Node * pointer;
-	
-};
+#include "sp_node.h"
+
+typedef struct SPNode Node;
 
 class Stack{
 
