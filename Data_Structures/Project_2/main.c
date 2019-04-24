@@ -456,6 +456,53 @@ bool testar(int * array_de_teste, char * tipo){
 
 }
 
+void lerLog(){
+
+	FILE * arquivo;
+
+	arquivo = fopen("./log.log", "r");
+
+	double acc_acertos = 0, acc_falsa_rejeicao = 0, acc_falsa_aceitacao = 0, contagem = 0;
+	double acertos, falsa_rejeicao, falsa_aceitacao;
+
+	while(fscanf(arquivo, "%lf %lf %lf", &acertos, &falsa_rejeicao, &falsa_aceitacao) != EOF){
+
+		acc_acertos += acertos;
+
+		acc_falsa_aceitacao += falsa_aceitacao;
+
+		acc_falsa_rejeicao += falsa_rejeicao;
+
+		contagem++;
+
+	}
+
+	fclose(arquivo);
+
+	acc_acertos /= contagem;
+	acc_falsa_aceitacao /= contagem;
+	acc_falsa_rejeicao /= contagem;
+
+	acc_acertos *= 100.0;
+	acc_falsa_aceitacao *= 100.0;
+	acc_falsa_rejeicao *= 100.0;
+
+	printf("▶ Acertos: %.2lf%% Falsa Rejeicao: %.2lf%% Falsa Aceitacao: %.2lf%%\n", acc_acertos, acc_falsa_rejeicao, acc_falsa_aceitacao);
+
+}
+
+void inserirLog(double acertos, double falsa_aceitacoes, double falsa_rejeicoes){
+
+	FILE * arquivo;
+
+	arquivo = fopen("./log.log", "a");
+
+	fprintf(arquivo, "\n%.5lf %.5lf %.5lf", acertos, falsa_rejeicoes, falsa_aceitacoes);
+
+	fclose(arquivo);
+
+}
+
 int main(){
 
 	printf("\n▶ Separando dataset aleatoriamente...\n");
@@ -513,6 +560,14 @@ int main(){
 	printf("▶ Taxa de acerto: %.2lf%%\n\n", taxa_de_acerto * 100.0);
 	printf("▶ Taxa de falsa aceitacao: %.2lf%%\n\n", falsa_aceitacao * 100.0);
 	printf("▶ Taxa de falsa rejeicao: %.2lf%%\n\n", falsa_rejeicao * 100.0);
+
+	inserirLog(taxa_de_acerto, falsa_rejeicao, falsa_aceitacao);
+
+	printf("\n▶ Log de execucoes anteriores:\n\n");
+
+	lerLog();
+
+	printf("\n\n");
 
 }
 
