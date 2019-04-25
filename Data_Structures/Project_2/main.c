@@ -9,8 +9,19 @@
 #define TAMANHO_FEATURES 536
 #define TAMANHO_DATASET 50
 #define TAMANHO_ILBP 512
-#define PIXEL_MAX 256
-#define DIRECOES 8
+#define PIXEL_MAX 256			// Mapa de cores do
+#define DIRECOES 8				// Direcoes do GLCM
+
+// Parametros que afetam o funcionamento de ILPB
+
+#define VALOR_ROTACAO 9 		// Define amplitude de rightshift do ILBP
+#define MATRIZ_ILBP 1
+
+// Define se o usuario que ver o numeros calculados
+
+bool verCalculos = false;
+
+// Parametros que afetam o funcionnmento de GLMC
 
 double taxa_de_acerto = 0;
 double falsa_aceitacao = 0;
@@ -41,7 +52,7 @@ char nomeDoArquivo[100];
 char * nomeDaPasta = "./DataSet/";
 char * tipoDeArquivo = ".txt";
 
-unsigned int x = 1;
+unsigned int x;
 
 int randInt(int l, int r){
 
@@ -78,21 +89,15 @@ void peekBidimensional(int size, int ** array){
 }
 
 // Para debugar e dar uma olhada nos features
-void peek(int size, double * array){
+void peek(int size, int * array){
 
 	printf("\n");
-	printf("-----------------\n");
-	printf("\n");
 
-	printf("    ");
 	for(int i = 0; i < size; i++){
-		printf("%.4lf ",array[i]);
+		printf("%d ",array[i]);
 	}
-	printf("\n");
 
-	printf("\n");
-	printf("-----------------\n");
-	printf("\n");
+	printf("\n\n");
 
 }
 
@@ -188,14 +193,16 @@ int rightShift(int original){
 	int resultado = 0;
 
 	if(original & 1)
-		resultado += 1 << 9;
+		resultado += 1 << (VALOR_ROTACAO - 1);
 
-	for(int i = 1; i < 9; i++){
+	for(int i = 1; i < VALOR_ROTACAO; i++){
 
 		if((1 << i) & original)
 			resultado += (1 << (i - 1));
 
 	}
+
+	//printf("RECEBIDO: %d RETORNADO: %d\n", original, resultado);
 
 	return resultado;
 
@@ -240,27 +247,27 @@ void ILBP(double * features){
 	int bitmask, ILBP_codigo;
 	double media;
 
-	for(size_t i = 1; i < TAMANHO_LEITURA - 1; i++){
+	for(size_t i = MATRIZ_ILBP; i < TAMANHO_LEITURA - MATRIZ_ILBP; i++){
 
-		for(size_t j = 1; j < TAMANHO_LEITURA - 1; j++){
+		for(size_t j = MATRIZ_ILBP; j < TAMANHO_LEITURA - MATRIZ_ILBP; j++){
 
 			bitmask = 0;
 			media = 0;
 
-			for(int li = -1; li <= 1; li++)
-				for(int lj = -1; lj <= 1; lj++)
+			for(int li = -MATRIZ_ILBP; li <= MATRIZ_ILBP; li++)
+				for(int lj = -MATRIZ_ILBP; lj <= MATRIZ_ILBP; lj++)
 					media += leitura[i + li][j + lj];
 
-			media = media / 9.0;
+			media = media / (double)((MATRIZ_ILBP * 2 + 1) * (MATRIZ_ILBP * 2 + 1));
 
-			for(int li = -1; li <= 1; li++)
-				for(int lj = -1; lj <= 1; lj++)
-					if(leitura[i + li][j + lj] > media)
-						bitmask = bitmask + (1 << ((lj + 1) + (li + 1) * 3));
+			for(int li = -MATRIZ_ILBP; li <= MATRIZ_ILBP; li++)
+				for(int lj = -MATRIZ_ILBP; lj <= MATRIZ_ILBP; lj++)
+					if(leitura[i + li][j + lj] >= media)
+						bitmask = bitmask + (int)(1LL << ((lj + MATRIZ_ILBP) + (li + MATRIZ_ILBP) * (MATRIZ_ILBP * 2 + 1)));
 
 			ILBP_codigo = bitmask;
 
-			for(int i = 0; i < 9; i++){
+			for(int i = 0; i < VALOR_ROTACAO; i++){
 
 				int nova_bitmask = rightShift(bitmask);
 				
@@ -277,6 +284,13 @@ void ILBP(double * features){
 
 	}
 
+	if(verCalculos){
+
+		printf("\nILBP: ");
+		peek(512, ILBP_resultado);
+	
+	}
+
 	for(int i = 0; i < TAMANHO_ILBP; i++)
 		features[i] = ILBP_resultado[i];
 
@@ -288,6 +302,9 @@ void GLCM(double * features){
 	double GLCM_matriz[PIXEL_MAX][PIXEL_MAX];
 
 	double output[3 * 8];
+
+	if(verCalculos)
+		printf("GLCM:\n");
 
 	for(int k = 0; k < DIRECOES; k++){
 
@@ -324,14 +341,19 @@ void GLCM(double * features){
 				homogeniedade += probabilidade / (double)(1.0 + abs(i - j));
 			
 			}
-
 		}
+
+		if(verCalculos)
+			printf("ENERGIA: %.4lf \tCONSTRASTE: %.4f\t\tHOMOGENIEDADE: %.4lf\n", energia, contraste, homogeniedade);
 
 		features[TAMANHO_ILBP + k * 3 + 0] = energia;
 		features[TAMANHO_ILBP + k * 3 + 1] = contraste;
 		features[TAMANHO_ILBP + k * 3 + 2] = homogeniedade;
 
 	}
+
+	if(verCalculos)
+		printf("\n");
 
 }
 
@@ -392,7 +414,7 @@ double distanciaEuclidiana(double * vetor1, double * vetor2){
 
 	}
 
-	return distancia;
+	return 1.0 - distancia;
 
 }
 
@@ -421,10 +443,10 @@ bool testar(int * array_de_teste, char * tipo){
 
 		if(distanciaAsfalto > distanciaGrama){
 
-			if(tipo == "grass"){
+			if(tipo == "asphalt"){
 
-				falsa_rejeicao++;
-				printf("Falsa rejeicao");
+				falsa_aceitacao++;
+				printf("Falsa aceitacao");
 
 			}else{ 
 
@@ -435,10 +457,10 @@ bool testar(int * array_de_teste, char * tipo){
 
 		}else{
 
-			if(tipo == "asphalt"){
+			if(tipo == "grass"){
 
-				falsa_aceitacao++;
-				printf("Falsa aceitacao");
+				falsa_rejeicao++;
+				printf("Falsa rejeicao");
 
 			}else{ 
 
@@ -503,7 +525,13 @@ void inserirLog(double acertos, double falsa_aceitacoes, double falsa_rejeicoes)
 
 }
 
-int main(){
+int main(int argc, char * argv[]){
+
+	if(argc > 1 && argv[1][1] == 'v')
+		verCalculos = true;
+
+	if(verCalculos)
+		printf("\n▶ MODO VERBOSO ATIVADO\n");
 
 	printf("\n▶ Separando dataset aleatoriamente...\n");
 
