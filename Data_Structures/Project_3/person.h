@@ -13,7 +13,7 @@ struct Person
     char * name;
     char * phone;
     char * address;
-    unsigned long long * identification;
+    long long * identification;
     char * birth_date;
 };
 
@@ -30,7 +30,7 @@ void destroyPerson(Person * person);
 bool setName(char * name, Person * person);
 bool setAddress(char * name, Person * person);
 bool setPhone(char * name, Person * person);
-bool setIdentifier(char * name, Person * person);
+bool setIdentification(long long int, Person * person);
 bool setBirthDate(char * name, Person * person);
 
 // Getters
@@ -39,6 +39,6 @@ char * getBirthDate(Person * person);
 char * getAddress(Person * person);
 char * getPhone(Person * person);
 char * getName(Person * person);
-char * getIdentifier(Person * person);
+long long int getIdentification(Person * person);
 
 #endif

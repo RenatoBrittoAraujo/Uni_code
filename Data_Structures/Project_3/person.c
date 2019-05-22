@@ -105,13 +105,13 @@ char * getBirthDate(Person * person)
     return birth_date;
 }
 
-bool setIdentification(unsigned long long identification, Person * person)
+bool setIdentification(long long int identification, Person * person)
 {
     *(person->identification) = identification;
     return true;
 }
 
-unsigned long long getIdentification(Person * person)
+long long int getIdentification(Person * person)
 {
     return *(person->identification);
 }

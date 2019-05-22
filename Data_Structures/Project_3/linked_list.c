@@ -34,9 +34,13 @@ Node * newNode()
     return newnode;
 }
 
-void destroyNode()
+void destroyNode(Node * node)
 {
-
+    if(node->person != NULL)
+        destroyPerson(node->person);
+    if(node != NULL)
+        free(node);
+    node = NULL;
 }
 
 void destroyLinkedList(LinkedList * list)
@@ -120,7 +124,7 @@ bool removeFromLinkedList(char * name, LinkedList * list)
     if(last_node == NULL)
     {
         list->root = current_node->next;
-        destoyNode(current_node);
+        destroyNode(current_node);
     }
     last_node->next = current_node->next;
     destroyNode(current_node);
@@ -166,43 +170,15 @@ void listIteration(LinkedList * list)
     printf("\n");
 }
 
-int main()
+Node * getFirstNameInstance(char * name, LinkedList * list)
 {
-    LinkedList * list = newLinkedList();
+    Node * current_node = list->root;
 
-    Person * jose = newPerson();
-    Person * maria = newPerson();
-    Person * joao = newPerson();
-    Person * barak = newPerson();
+    while(current_node != NULL && strcmp(name, current_node->person->name))
+        next(&current_node);
 
-    setName("Maria", maria);
-    sortAddToLinkedList(maria, list);
+    if(current_node != NULL)
+        return current_node;
 
-    setName("Jose", jose);
-    sortAddToLinkedList(jose, list);
-
-    setName("Joao", joao);
-    sortAddToLinkedList(joao, list);
-
-    setName("Barak", barak);
-    sortAddToLinkedList(barak, list);
-
-    listIteration(list);
-
-    destroyLinkedList(list);
-
-    list = newLinkedList();
-
-    addToLinkedList(maria, list);
-    addToLinkedList(jose, list);
-    addToLinkedList(joao, list);
-    addToLinkedList(barak, list);
-
-    listIteration(list);
-
-    sortList(list);
-
-    listIteration(list);
-
-    destroyLinkedList(list);
+    return NULL;
 }

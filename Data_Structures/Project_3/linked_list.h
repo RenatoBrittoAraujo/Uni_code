@@ -24,8 +24,11 @@ typedef struct LinkedList LinkedList;
 LinkedList * newLinkedList();
 void destroyLinkedList(LinkedList * list);
 void addToLinkedList(Person * person, LinkedList * list);
+void sortAddToLinkedList(Person * person, LinkedList * list);
 bool removeFromLinkedList(char * name, LinkedList * list);
 void sortList(LinkedList * list);
 void next(Node ** current_node);
+Node * getFirstNameInstance(char * name, LinkedList * list);
+void listIteration(LinkedList * list);
 
 #endif
