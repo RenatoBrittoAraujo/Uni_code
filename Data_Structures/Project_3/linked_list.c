@@ -14,9 +14,39 @@ LinkedList * newLinkedList()
     return newlist;
 }
 
+// Leia mais: https://catonmat.net/ascii-case-conversion-trick
+char toLower(char c)
+{
+    if(c >= 65 && c <= 90)
+    {
+        return c ^ 32;
+    }
+    return c;
+}
+
+int stringCompare(const char * a, const char * b)
+{
+    size_t comparison_size = strlen(a);
+    if(strlen(b) < comparison_size)
+        comparison_size = strlen(b);
+    for(size_t i = 0; i < comparison_size; i++)
+    {
+        if(toLower(a[i]) < toLower(b[i]))
+            return -1;
+        if(toLower(a[i]) > toLower(b[i]))
+            return 1;
+    }
+    if(strlen(a) < strlen(b))
+        return -1;
+    if(strlen(b) < strlen(a))
+        return 1;
+
+    return 0;
+}
+
 bool compareNodes(Node * a, Node * b)
 {
-    return strcmp(a->person->name, b->person->name) > 0;
+    return stringCompare(a->person->name, b->person->name) > 0;
 }
 
 void swapNodes(Node * a, Node * b)
@@ -69,12 +99,10 @@ void addToLinkedList(Person * person, LinkedList * list)
 
 void sortAddToLinkedList(Person * person, LinkedList * list)
 {
-    if(!list->sorted)
-        sortList(list);
     Node * current_node = list->root;
     Node * newnode = newNode();
     newnode->person = person;
-    if(list->size == 0)
+    if(list->root == NULL)
     {
         list->root = newnode;
         list->end = newnode;
@@ -83,49 +111,52 @@ void sortAddToLinkedList(Person * person, LinkedList * list)
     }
     list->size = list->size + 1;
 
-    if(!compareNodes(newnode, current_node))
+    Node * last = NULL;
+
+    while(compareNodes(newnode, current_node))
+    {
+        last = current_node;
+        next(&current_node);
+        if(current_node == NULL)
+            break;
+    }
+
+    if(last == NULL)
     {
         newnode->next = list->root;
         list->root = newnode;
-        return;
     }
-
-    while(current_node->next != NULL && compareNodes(newnode, current_node))
-        next(&current_node);
-
-    Node * next_node = current_node->next;
-    current_node->next = newnode;
-    newnode->next = next_node;
-    if(current_node->next == NULL)
-        list->end = newnode;
+    else
+    {
+        newnode->next = current_node;
+        last->next = newnode;
+    }
 }
 
-bool removeFromLinkedList(char * name, LinkedList * list)
+void removeFromLinkedList(Node * node, LinkedList * list)
 {
-    bool found = false;
     Node * current_node = list->root;
     Node * last_node = NULL;
     while(current_node != NULL)
     {
-        if(!strcmp(current_node->person->name, name))
-        {
-            found = true;
+        if(current_node == node)
             break;
-        } 
         last_node = current_node;
         next(&current_node);
     }
     
-    if(!found)
-        return false;
-    
+    if(current_node == NULL)
+        return;
+
     list->size = list->size - 1;
 
     if(last_node == NULL)
     {
         list->root = current_node->next;
         destroyNode(current_node);
+        return;
     }
+    
     last_node->next = current_node->next;
     destroyNode(current_node);
 }
@@ -174,7 +205,7 @@ Node * getFirstNameInstance(char * name, LinkedList * list)
 {
     Node * current_node = list->root;
 
-    while(current_node != NULL && strcmp(name, current_node->person->name))
+    while(current_node != NULL && stringCompare(name, current_node->person->name))
         next(&current_node);
 
     if(current_node != NULL)

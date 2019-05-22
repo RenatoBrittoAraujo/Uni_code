@@ -6,13 +6,12 @@
 
 LinkedList * readFile(char * filename)
 {
+    LinkedList * list = newLinkedList();
     FILE * file;
     file = fopen(filename, "r");
 
     if(file == NULL)
-        file = fopen(filename, "w");
-
-    LinkedList * list = newLinkedList();
+        return list;
 
     char read[300];
     Person * current;
