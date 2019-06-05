@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "BinaryIndexedTree.h"
+#include "TreePrinter.h"
 
 #define mloadTree 1
 #define mshowTree 2
@@ -46,12 +47,17 @@ void fLoadTree()
 
 void fShowTree()
 {
+    if(tree->size == 0)
+    {
+        printf("Tree is empty");
+        return;
+    }
     if(tree->size > 20)
     {
         printf("Tree exceeds maximum size to be displayed");
         return;
     }
-    showTree(tree);
+    adaptAndPrint(tree);
 }
 
 void fTreeFull()
@@ -100,7 +106,10 @@ void fPostOrder()
 
 void fBalance()
 {
-    
+    if(balanceTree(tree))
+        printf("Tree was balaced");
+    else
+        printf("Tree is already balanced");
 }
 
 void fAdd()
@@ -127,6 +136,7 @@ int main()
 
     while(1)
     {
+        system("clear");
         showOptions();
         
         printf("\nSelection: ");
@@ -177,6 +187,9 @@ int main()
         }
 
     printf("\n\n");
+    char random;
+    printf("Press any key to continue: ");
+    scanf(" %c", &random);
     }  
 
     return 0;

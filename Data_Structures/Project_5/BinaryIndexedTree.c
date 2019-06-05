@@ -39,17 +39,27 @@ void destroyTree(BIT * tree)
     tree->root = NULL;
 }
 
-Node * findMin(Node * current)
+Node * findMin(Node * node)
 {
-    if(current == NULL)
+    if(node == NULL)
         return NULL;
-    if(current->left == NULL)
-        return current;
+    if(node->left == NULL)
+        return node;
     else
-        findMin(current->left);
+        return findMin(node->left);
 }
 
-Node * delete(int value, Node * node, BIT * tree) 
+Node * findMax(Node * node)
+{
+    if(node == NULL)
+        return NULL;
+    if(node->right == NULL)
+        return node;
+    else 
+        return findMax(node->right);
+}
+
+Node * deleteValue(int value, Node * node, BIT * tree) 
 {
     Node * temp;
 
@@ -57,16 +67,16 @@ Node * delete(int value, Node * node, BIT * tree)
         return NULL;
 
     if (value < node->value) 
-        node->left = delete(value, node->left, tree);
+        node->left = deleteValue(value, node->left, tree);
 
     else if (value > node->value) 
-        node->right = delete(value, node->right, tree);
+        node->right = deleteValue(value, node->right, tree);
 
     else if (node->left != NULL && node->right != NULL)
     {
         temp = findMin(node->right);
         node->value = temp->value;
-        node->right = delete(node->value, node->right, tree);
+        node->right = deleteValue(node->value, node->right, tree);
     }
     else
     {
@@ -123,6 +133,57 @@ bool treeFullRecursion(Node * node)
         return treeFullRecursion(node->left) && treeFullRecursion(node->right); 
 
     return 0; 
+}
+
+void rightRotation(Node * granpa, Node * dad, Node * child)
+{
+    if(granpa != NULL)
+    {
+        if(granpa->left == dad)
+            granpa->left = child;
+        else
+            granpa->right = child;
+    }
+    dad->left = child->right;
+    child->right = dad;
+}
+
+void leftRotation(Node * granpa, Node * dad, Node * child)
+{
+    if(granpa != NULL)
+    {
+        if(granpa->left == dad)
+            granpa->left = child;
+        else
+            granpa->right = child;
+    }
+    dad->right = child->left;
+    child->left = dad;
+}
+
+void treeToBackBone(Node * node, BIT * tree)
+{
+    if(node == NULL)
+        return;
+    Node * child = node, * dad;
+    if(node->left != NULL)
+        treeToBackBone(node->left, tree);
+    if(node->parent == NULL)
+        return;
+    dad = child->parent;
+    Node * granpa = dad->parent;
+    if(granpa == NULL)
+        tree->root = child;
+    else
+        granpa->left = child;
+    Node * last = findMax(child);
+    dad->parent = last;
+    last->right = dad;
+}
+
+void backBoneToTree(Node * node)
+{
+
 }
 
 // "Public" functions --------------------
@@ -269,7 +330,7 @@ bool removeFromTree(int value, BIT * tree)
 {
     int treeSizeBefore = tree->size;
 
-    delete(value, tree->root, tree);
+    deleteValue(value, tree->root, tree);
 
     if(treeSizeBefore != tree->size)
         return 1;
@@ -291,18 +352,30 @@ bool balanceTree(BIT * tree)
 {
     if(treeBalanced(tree->root))
         return 0;
-    
+    treeToBackBone(tree->root, tree);
+    return 1;
 }
+
+void walk(Node * node)
+{
+    if(node == NULL)
+        return;
+    printf("Current node: %d\n", node->value);
+    printf("Parent: %s\n", node->parent == NULL ? "NULL" : "NOT NULL");
+    printf("Right: %s\n", node->right == NULL ? "NULL" : "NOT NULL");
+    printf("Left: %s\n", node->left == NULL ? "NULL" : "NOT NULL");
+    walk(node->left);
+    walk(node->right);
+}
+
 /*
 int main()
 {
-    BIT tree;
-    initilizeBIT(&tree);
-    treeInsert(2, &tree);
-    treeInsert(1, &tree);
-    treeInsert(3, &tree);
-    printf("HEIGHT: %d\n", getTreeHeight(&tree));
-    printf("BALANCED: %s\n", treeBalanced(tree.root) ? "BALANCED" : "NOT BALANCED");
-    printf("TREE FULL: %s\n", treeFull(&tree) ? "FULL" : "NOT FULL");
+    BIT * tree = newTree();
+    initilizeBIT(tree);
+    char name[] = "bst1.txt";
+    if(loadTreeFromFile(name, tree))
+        printf("LOADED\n");
+    printf("Tree balanced: %s\n", treeBalanced(tree->root) ? "YES" : "NO");
 }
 */
