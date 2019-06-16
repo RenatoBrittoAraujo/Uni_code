@@ -24,9 +24,9 @@ typedef struct BIT BIT;
 BIT * newTree();
 void initilizeBIT(BIT * tree);
 
+// As 10 funções pedidas
 
 bool loadTreeFromFile(char * fileName, BIT * tree);
-void treeInsert(int value, BIT * tree);
 bool treeSearch(int value, BIT * tree);
 void inOrderWalk(Node * node);
 void preOrderWalk(Node * node);
@@ -36,5 +36,11 @@ bool removeFromTree(int value, BIT * tree);
 bool treeFull(BIT * tree);
 int getTreeHeight(BIT * tree);
 bool balanceTree(BIT * tree);
+
+// Funções adicionais
+
+void treeInsert(int value, BIT * tree);
+void clearTree(BIT * tree);
+void saveTree(char * name, BIT * tree);
 
 #endif

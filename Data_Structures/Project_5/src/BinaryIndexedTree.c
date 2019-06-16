@@ -4,9 +4,7 @@
 #include <stdbool.h>
 #include <string.h>
 
-#define PRETTY_PRINT_BOUND 60
-
-// "Private" functions ---------------------
+// Funções "Privadas"
 
 Node * newNode()
 {
@@ -16,11 +14,6 @@ Node * newNode()
     newNode->right = NULL;
     newNode->left = NULL;
     return newNode;
-}
-
-Node * treePointerSearch(int value, BIT * tree)
-{
-
 }
 
 void destroyTreeRecursion(Node * node)
@@ -39,17 +32,27 @@ void destroyTree(BIT * tree)
     tree->root = NULL;
 }
 
-Node * findMin(Node * current)
+Node * findMin(Node * node)
 {
-    if(current == NULL)
+    if(node == NULL)
         return NULL;
-    if(current->left == NULL)
-        return current;
+    if(node->left == NULL)
+        return node;
     else
-        findMin(current->left);
+        return findMin(node->left);
 }
 
-Node * delete(int value, Node * node, BIT * tree) 
+Node * findMax(Node * node)
+{
+    if(node == NULL)
+        return NULL;
+    if(node->right == NULL)
+        return node;
+    else 
+        return findMax(node->right);
+}
+
+Node * deleteValue(int value, Node * node, BIT * tree) 
 {
     Node * temp;
 
@@ -57,16 +60,16 @@ Node * delete(int value, Node * node, BIT * tree)
         return NULL;
 
     if (value < node->value) 
-        node->left = delete(value, node->left, tree);
+        node->left = deleteValue(value, node->left, tree);
 
     else if (value > node->value) 
-        node->right = delete(value, node->right, tree);
+        node->right = deleteValue(value, node->right, tree);
 
     else if (node->left != NULL && node->right != NULL)
     {
         temp = findMin(node->right);
         node->value = temp->value;
-        node->right = delete(node->value, node->right, tree);
+        node->right = deleteValue(node->value, node->right, tree);
     }
     else
     {
@@ -120,12 +123,81 @@ bool treeFullRecursion(Node * node)
         return 1; 
 
     if (node->left != NULL && node->right != NULL) 
-        return treeFullRecursion(node->left) && treeFullRecursion(node->right); 
+        return treeFullRecursion(node->left) && treeFullRecursion(node->right) && getTreeHeightRecursion(node->left) == getTreeHeightRecursion(node->right); 
 
     return 0; 
 }
 
-// "Public" functions --------------------
+void treeToBackBone(Node * node, BIT * tree, bool left)
+{
+    if(node == NULL)
+        return;
+
+    treeToBackBone(node->right, tree, 0);
+
+    if(node->left != NULL)
+        treeToBackBone(node->left, tree, 1);
+    else
+        return;
+
+    Node * child = node->left;
+
+    if(node->parent == NULL)
+    {
+        tree->root = child;
+        child->parent = NULL;
+    }
+    else if(left)
+    {
+        node->parent->left = child;
+        child->parent = node->parent;
+    }
+    else if(!left)
+    {
+        node->parent->right = child;
+        child->parent = node->parent;
+    }
+
+    Node * last = findMax(child);
+    last->right = node;
+    node->parent = last;
+    node->left = NULL;
+}
+
+void backBoneToTree(Node * node, BIT * tree)
+{
+    if(node == NULL)
+        return;
+    Node * child = node->right;
+    if(child == NULL || child->right == NULL)
+        return;
+    if(node->parent == NULL)
+    {
+        child->parent = NULL;
+        tree->root = child;
+    }
+    else
+    {
+        node->parent->right = child;
+        child->parent = node->parent;
+    }
+    Node * last = findMax(node);
+    node->parent = child;
+    node->right = child->left;
+    child->left = node;
+    backBoneToTree(child->right, tree);
+}
+
+void saveTreeRecursion(Node * node, FILE * file)
+{
+    if(node == NULL)
+        return;
+    fprintf(file, "%d ", node->value);
+    saveTreeRecursion(node->left, file);
+    saveTreeRecursion(node->right, file);
+}
+
+// Funções "Publicas"
 
 BIT * newTree()
 {
@@ -148,13 +220,15 @@ bool loadTreeFromFile(char * fileName, BIT * tree)
     int v = 0;
     if(file == NULL)
         return 0;
+
     destroyTree(tree);
-    fscanf (file, "%d", &v);    
-    while (!feof (file))
+
+    do
     {  
+        fscanf (file, "%d", &v); 
         treeInsert(v, tree);        
-        fscanf (file, "%d", &v);      
-    }
+    } while (!feof (file));
+
     fclose (file);
     return 1;
 }
@@ -221,55 +295,24 @@ void preOrderWalk(Node * node)
     if(node == NULL)
         return;
     printf("%d ", node->value);
-    inOrderWalk(node->left);
-    inOrderWalk(node->right);
+    preOrderWalk(node->left);
+    preOrderWalk(node->right);
 }
 
 void postOrderWalk(Node * node)
 {
     if(node == NULL)
         return;
-    inOrderWalk(node->left);
-    inOrderWalk(node->right);
+    postOrderWalk(node->left);
+    postOrderWalk(node->right);
     printf("%d ", node->value);
-}
-
-void recursiveFillMap(int height, int distance, char map[PRETTY_PRINT_BOUND][PRETTY_PRINT_BOUND], Node * node)
-{
-    if(node == NULL)
-        return;
-    map[height][PRETTY_PRINT_BOUND / 2 - distance * height] = '*';
-    printf("ON %d with distance %d and height %d\n", node->value, distance, height);
-    recursiveFillMap(height + 1, distance * 2, map, node->left);
-    recursiveFillMap(height + 1, distance * 2 + 1, map, node->right);
-}
-
-void showTree(BIT * tree)
-{
-    if(tree->size > 20)
-        return;
-    char map[PRETTY_PRINT_BOUND][PRETTY_PRINT_BOUND];
-
-    for(int i = 0; i < PRETTY_PRINT_BOUND; i++)
-        for(int j = 0; j < PRETTY_PRINT_BOUND ; j++)
-            map[i][j] = ' ';
-
-    recursiveFillMap(0, 1, map, tree->root);
-    
-    for(int i = 0; i < 10; i++)
-    {
-        for(int j = 0; j < PRETTY_PRINT_BOUND; j++)
-            printf("%c", map[i][j]);
-        printf("\n");
-    }
-    
 }
 
 bool removeFromTree(int value, BIT * tree)
 {
     int treeSizeBefore = tree->size;
 
-    delete(value, tree->root, tree);
+    deleteValue(value, tree->root, tree);
 
     if(treeSizeBefore != tree->size)
         return 1;
@@ -284,25 +327,41 @@ bool treeFull(BIT * tree)
 
 int getTreeHeight(BIT * tree)
 {
-    return getTreeHeightRecursion(tree->root);
+    int height = getTreeHeightRecursion(tree->root) - 1;
+    return height >= 0 ? height : 0;
 }
 
 bool balanceTree(BIT * tree)
 {
     if(treeBalanced(tree->root))
         return 0;
-    
+    treeToBackBone(tree->root, tree, 0);
+    int repetitions = -1;
+    int size = tree->size;
+    while(size / 2 > 0)
+    {
+        size /= 2;
+        repetitions++;
+    }
+    for(int i = 0; i < repetitions; i++)
+        backBoneToTree(tree->root, tree);
+    return 1;
 }
-/*
-int main()
+
+void clearTree(BIT * tree)
 {
-    BIT tree;
-    initilizeBIT(&tree);
-    treeInsert(2, &tree);
-    treeInsert(1, &tree);
-    treeInsert(3, &tree);
-    printf("HEIGHT: %d\n", getTreeHeight(&tree));
-    printf("BALANCED: %s\n", treeBalanced(tree.root) ? "BALANCED" : "NOT BALANCED");
-    printf("TREE FULL: %s\n", treeFull(&tree) ? "FULL" : "NOT FULL");
+    destroyTree(tree);
 }
-*/
+
+void saveTree(char * name, BIT * tree)
+{
+    char folder[] = "./tree_files/";
+    char * path = (char *) malloc(sizeof(folder) + sizeof(name) + 5);
+    strcpy(path, folder);
+    strcat(path, name);
+    FILE * file = fopen(path, "a");
+    if(file == NULL)
+        return;
+    saveTreeRecursion(tree->root, file);
+    fclose(file);
+}

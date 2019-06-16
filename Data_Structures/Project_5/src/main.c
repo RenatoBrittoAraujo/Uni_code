@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "BinaryIndexedTree.h"
+#include "TreePrinter.h"
 
 #define mloadTree 1
 #define mshowTree 2
@@ -12,6 +13,8 @@
 #define mpostOrder 9
 #define mbalance 10
 #define madd 11
+#define mclear 12
+#define msave 13
 
 void showOptions()
 {
@@ -27,6 +30,8 @@ void showOptions()
     printf("%d - Post-order walk\n", mpostOrder);
     printf("%d - Balance tree\n", mbalance);
     printf("%d - Add to tree\n", madd);
+    printf("%d - Clear tree\n", mclear);
+    printf("%d - Save tree as file\n", msave);
     printf("0 - Exit\n");
 }
 
@@ -46,12 +51,17 @@ void fLoadTree()
 
 void fShowTree()
 {
+    if(tree->size == 0)
+    {
+        printf("Tree is empty");
+        return;
+    }
     if(tree->size > 20)
     {
         printf("Tree exceeds maximum size to be displayed");
         return;
     }
-    showTree(tree);
+    adaptAndPrint(tree);
 }
 
 void fTreeFull()
@@ -100,7 +110,10 @@ void fPostOrder()
 
 void fBalance()
 {
-    
+    if(balanceTree(tree))
+        printf("Tree was balaced");
+    else
+        printf("Tree is already balanced");
 }
 
 void fAdd()
@@ -117,6 +130,28 @@ void fAdd()
     }
 }
 
+void fclear()
+{
+    printf("Tree was cleared");
+    clearTree(tree);
+}
+
+void fsaveFile()
+{
+    if(tree->size == 0)
+    {
+        printf("Trying to save empty tree");
+        return;
+    }
+    char name[100];
+    printf("File name: ");
+    scanf("%s", name);
+    saveTree(name, tree);
+    printf("\nFile was saved");
+}
+
+void system(char * operation);
+
 int main()
 {  
     tree = newTree();
@@ -127,6 +162,7 @@ int main()
 
     while(1)
     {
+        system("clear");
         showOptions();
         
         printf("\nSelection: ");
@@ -170,13 +206,22 @@ int main()
             break;     
         case madd:
             fAdd();
-            break;   
+            break; 
+        case mclear:
+            fclear();
+            break;
+        case msave:
+            fsaveFile();
+            break;
         default:
             printf("Invalid option");
             break;
         }
 
     printf("\n\n");
+    char random;
+    printf("Press any key to continue: ");
+    scanf(" %c", &random);
     }  
 
     return 0;
